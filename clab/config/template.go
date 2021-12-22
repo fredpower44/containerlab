@@ -74,7 +74,7 @@ func RenderAll(allnodes map[string]*NodeConfig) error {
 			if l := tmpl.Lookup(tmplN); l == nil {
 				err := LoadTemplates(tmpl, fmt.Sprintf("%s", nc.Vars[vkRole]))
 				if err != nil {
-					log.Warnf("Unable to load template %s; skipping", tmplN)
+					log.Warnf("Unable to load template %s (%+v); skipping", tmplN, err)
 					continue
 				}
 				l = tmpl.Lookup(tmplN)
@@ -107,7 +107,7 @@ func (c *NodeConfig) String() string {
 }
 
 // Print the config
-func (c *NodeConfig) Print(vars, rendered bool) {
+func (c *NodeConfig) Print(vars, rendered bool) { //skipcq: RVV-A0005
 	var s strings.Builder
 
 	s.WriteString(c.TargetNode.ShortName)

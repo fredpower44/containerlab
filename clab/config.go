@@ -80,7 +80,7 @@ type Config struct {
 	Prefix     *string         `json:"prefix,omitempty"`
 	Mgmt       *types.MgmtNet  `json:"mgmt,omitempty"`
 	Topology   *types.Topology `json:"topology,omitempty"`
-	ConfigPath string          `yaml:"config_path,omitempty"`
+	ConfigPath string
 }
 
 // ParseTopology parses the lab topology
@@ -221,7 +221,7 @@ func (c *CLab) createNodeCfg(nodeName string, nodeDef *types.NodeDefinition, idx
 	nodeCfg := &types.NodeConfig{
 		ShortName:       nodeName,
 		LongName:        longName,
-		Fqdn:            strings.Join([]string{nodeName, c.Config.Name, ".io"}, "."),
+		Fqdn:            strings.Join([]string{nodeName, c.Config.Name, "io"}, "."),
 		LabDir:          filepath.Join(c.Dir.Lab, nodeName),
 		Index:           idx,
 		Group:           c.Config.Topology.GetNodeGroup(nodeName),
@@ -239,12 +239,13 @@ func (c *CLab) createNodeCfg(nodeName string, nodeDef *types.NodeDefinition, idx
 		MgmtIPv6Address: nodeDef.GetMgmtIPv6(),
 		Publish:         c.Config.Topology.GetNodePublish(nodeName),
 		Sysctls:         make(map[string]string),
-		Endpoints:       make([]*types.Endpoint, 0),
+		Endpoints:       make([]types.Endpoint, 0),
 		Sandbox:         c.Config.Topology.GetNodeSandbox(nodeName),
 		Kernel:          c.Config.Topology.GetNodeKernel(nodeName),
 		Runtime:         c.Config.Topology.GetNodeRuntime(nodeName),
 		CPU:             c.Config.Topology.GetNodeCPU(nodeName),
-		RAM:             c.Config.Topology.GetNodeRAM(nodeName),
+		CPUSet:          c.Config.Topology.GetNodeCPUSet(nodeName),
+		Memory:          c.Config.Topology.GetNodeMemory(nodeName),
 		StartupDelay:    c.Config.Topology.GetNodeStartupDelay(nodeName),
 
 		// Extras
@@ -287,7 +288,7 @@ func (c *CLab) createNodeCfg(nodeName string, nodeDef *types.NodeDefinition, idx
 // NewLink initializes a new link object
 func (c *CLab) NewLink(l *types.LinkConfig) *types.Link {
 	if len(l.Endpoints) != 2 {
-		log.Fatalf("endpoint %q has wrong syntax, unexpected number of items", l.Endpoints)
+		log.Fatalf("endpoint %q has wrong syntax, unexpected number of items", l.Endpoints) // skipcq: RVV-A0003
 	}
 
 	return &types.Link{
@@ -307,14 +308,14 @@ func (c *CLab) NewEndpoint(e string) *types.Endpoint {
 	// split the string to get node name and endpoint name
 	split := strings.Split(e, ":")
 	if len(split) != 2 {
-		log.Fatalf("endpoint %s has wrong syntax", e) // skipcq: GO-S0904
+		log.Fatalf("endpoint %s has wrong syntax", e) // skipcq: GO-S0904, RVV-A0003
 	}
 	nName := split[0] // node name
 
 	// initialize the endpoint name based on the split function
 	endpoint.EndpointName = split[1] // endpoint name
 	if len(endpoint.EndpointName) > 15 {
-		log.Fatalf("interface '%s' name exceeds maximum length of 15 characters", endpoint.EndpointName)
+		log.Fatalf("interface '%s' name exceeds maximum length of 15 characters", endpoint.EndpointName) //skipcq: RVV-A0003
 	}
 	// generate unique MAC
 	endpoint.MAC = utils.GenMac(ClabOUI)
@@ -342,7 +343,7 @@ func (c *CLab) NewEndpoint(e string) *types.Endpoint {
 		c.m.Lock()
 		if n, ok := c.Nodes[nName]; ok {
 			endpoint.Node = n.Config()
-			n.Config().Endpoints = append(n.Config().Endpoints, endpoint)
+			n.Config().Endpoints = append(n.Config().Endpoints, *endpoint)
 		}
 		c.m.Unlock()
 	}
@@ -350,7 +351,7 @@ func (c *CLab) NewEndpoint(e string) *types.Endpoint {
 	// stop the deployment if the matching node element was not found
 	// "host" node name is an exception, it may exist without a matching node
 	if endpoint.Node == nil {
-		log.Fatalf("not all nodes are specified in the 'topology.nodes' section or the names don't match in the 'links.endpoints' section: %s", nName) // skipcq: GO-S0904
+		log.Fatalf("not all nodes are specified in the 'topology.nodes' section or the names don't match in the 'links.endpoints' section: %s", nName) // skipcq: GO-S0904, RVV-A0003
 	}
 
 	return endpoint
@@ -627,7 +628,7 @@ func resolveBindPaths(binds []string, nodedir string) error {
 }
 
 // CheckResources runs container host resources check
-func (c *CLab) CheckResources() error {
+func (*CLab) CheckResources() error {
 	vcpu := runtime.NumCPU()
 	log.Debugf("Number of vcpu: %d", vcpu)
 	if vcpu < 2 {

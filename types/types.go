@@ -97,13 +97,16 @@ type NodeConfig struct {
 	// container labels
 	Labels map[string]string
 	// Slice of pointers to local endpoints
-	Endpoints []*Endpoint
+	Endpoints []Endpoint
 	// Ignite sandbox and kernel imageNames
 	Sandbox, Kernel string
 	// Configured container runtime
 	Runtime string
 	// Resource requirements
-	CPU, RAM         string
+	CPU    float64
+	CPUSet string
+	Memory string
+
 	DeploymentStatus string // status that is set by containerlab to indicate deployment stage
 
 	// Extras
