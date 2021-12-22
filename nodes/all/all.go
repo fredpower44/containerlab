@@ -9,6 +9,7 @@ import (
 	_ "github.com/srl-labs/containerlab/nodes/ceos"
 	_ "github.com/srl-labs/containerlab/nodes/crpd"
 	_ "github.com/srl-labs/containerlab/nodes/cvx"
+	_ "github.com/srl-labs/containerlab/nodes/ixia"
 	_ "github.com/srl-labs/containerlab/nodes/host"
 	_ "github.com/srl-labs/containerlab/nodes/linux"
 	_ "github.com/srl-labs/containerlab/nodes/mysocketio"
